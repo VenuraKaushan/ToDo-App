@@ -1,13 +1,16 @@
 import React, { useContext, useState } from 'react';
 import { TodoContext } from '../context/TodoContext';
-import { Container, Box, TextField, Typography, Button, Card, CardContent, IconButton, Grid, Dialog, DialogTitle, DialogContent, DialogActions, FormHelperText } from '@mui/material';
+import { AuthContext } from '../context/AuthContext'; 
+import { Container, Box, TextField, Typography, Button, Card, CardContent, IconButton, Grid, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
+import { useNavigate } from 'react-router-dom'; 
 
 const TodoList = () => {
     const { todos, deleteTodo, toggleTodoCompletion, addTodo, editTodo } = useContext(TodoContext);
+    const { logout, authState } = useContext(AuthContext); 
     const [searchQuery, setSearchQuery] = useState('');
     const [openAddModal, setOpenAddModal] = useState(false);
     const [openEditModal, setOpenEditModal] = useState(false);
@@ -18,6 +21,14 @@ const TodoList = () => {
     const [editDescription, setEditDescription] = useState('');
     const [addError, setAddError] = useState('');
     const [editError, setEditError] = useState('');
+
+    const navigate = useNavigate();
+
+    // Handle logout and navigate to root
+    const handleLogout = () => {
+        logout();
+        navigate('/'); 
+    };
 
     // Handle adding a new todo
     const handleAdd = () => {
@@ -65,7 +76,7 @@ const TodoList = () => {
                     </Typography>
                 </center>
 
-                {/* Search Bar and Add Todo Button */}
+                {/* Search Bar, Add Todo Button, and Logout Button */}
                 <Box
                     sx={{
                         display: 'flex',
@@ -94,6 +105,14 @@ const TodoList = () => {
                         sx={{ minWidth: 'auto' }}
                     >
                         Add New Todo
+                    </Button>
+                    <Button
+                        variant="contained"
+                        color="secondary"
+                        onClick={handleLogout}
+                        sx={{ minWidth: 'auto' }}
+                    >
+                        Logout
                     </Button>
                 </Box>
 
@@ -165,37 +184,34 @@ const TodoList = () => {
                     </Dialog>
                 )}
 
-                {/* Todo Cards */}
-                <Grid container spacing={3}>
+                {/* Todo List */}
+                <Grid container spacing={2}>
                     {filteredTodos.map(todo => (
                         <Grid item xs={12} sm={6} md={4} key={todo.id}>
                             <Card>
                                 <CardContent>
-                                    <Typography variant="h6">{todo.title}</Typography>
-                                    <Typography variant="body2">{todo.description}</Typography>
-                                    <Box sx={{ marginTop: 2 }}>
-                                        <Button
-                                            variant="contained"
-                                            color={todo.completed ? 'secondary' : 'primary'}
-                                            onClick={() => toggleTodoCompletion(todo.id)}
-                                            sx={{ marginRight: 1 }}
-                                        >
-                                            {todo.completed ? 'Mark as Incomplete' : 'Mark as Completed'}
-                                        </Button>
-                                        <IconButton
-                                            onClick={() => {
-                                                setEditingTodo(todo);
-                                                setEditTitle(todo.title);
-                                                setEditDescription(todo.description);
-                                                setOpenEditModal(true);
-                                            }}
-                                        >
-                                            <EditIcon />
-                                        </IconButton>
-                                        <IconButton onClick={() => deleteTodo(todo.id)}>
-                                            <DeleteIcon />
-                                        </IconButton>
-                                    </Box>
+                                    <Typography variant="h6" component="div">
+                                        {todo.title}
+                                    </Typography>
+                                    <Typography variant="body2">
+                                        {todo.description}
+                                    </Typography>
+                                </CardContent>
+                                <CardContent>
+                                    <IconButton onClick={() => {
+                                        setEditingTodo(todo);
+                                        setEditTitle(todo.title);
+                                        setEditDescription(todo.description);
+                                        setOpenEditModal(true);
+                                    }}>
+                                        <EditIcon />
+                                    </IconButton>
+                                    <IconButton onClick={() => deleteTodo(todo.id)}>
+                                        <DeleteIcon />
+                                    </IconButton>
+                                    <Button onClick={() => toggleTodoCompletion(todo.id)}>
+                                        {todo.completed ? 'Mark as Incomplete' : 'Mark as Complete'}
+                                    </Button>
                                 </CardContent>
                             </Card>
                         </Grid>

@@ -1,46 +1,69 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useContext } from 'react';
+import { AuthContext } from './AuthContext';
 
 // Create the context
 export const TodoContext = createContext();
 
+// Helper function to fetch todos from localStorage
+const fetchTodosFromLocalStorage = () => {
+    return JSON.parse(localStorage.getItem('todos')) || [];
+};
+
+// Helper function to save todos to localStorage
+const saveTodosToLocalStorage = (todos) => {
+    localStorage.setItem('todos', JSON.stringify(todos));
+};
+
 // Provider component
 export const TodoProvider = ({ children }) => {
+    const { authState } = useContext(AuthContext);
     const [todos, setTodos] = useState([]);
 
     useEffect(() => {
-        localStorage.setItem('todos', JSON.stringify(todos));
+        // Load todos specific to the current user
+        const allTodos = fetchTodosFromLocalStorage();
+        const userTodos = allTodos.filter(todo => todo.userId === authState.user?.id);
+        setTodos(userTodos);
+    }, [authState.user]);
+
+    useEffect(() => {
+        // Save todos to localStorage only when the todos state changes
+        const allTodos = fetchTodosFromLocalStorage();
+        const updatedTodos = allTodos.filter(todo => todo.userId !== authState.user?.id).concat(todos);
+        saveTodosToLocalStorage(updatedTodos);
     }, [todos]);
 
-    // Add a new todo
     const addTodo = (title, description) => {
         const newTodo = {
             id: Date.now(),
             title,
             description,
-            completed: false
+            completed: false,
+            userId: authState.user?.id
         };
-        setTodos([...todos, newTodo]);
+        setTodos(prevTodos => [...prevTodos, newTodo]);
     };
 
-    // Edit an existing todo
     const editTodo = (id, updatedTitle, updatedDescription) => {
-        setTodos(todos.map(todo =>
-            todo.id === id
-                ? { ...todo, title: updatedTitle, description: updatedDescription }
-                : todo
-        ));
+        setTodos(prevTodos =>
+            prevTodos.map(todo =>
+                todo.id === id
+                    ? { ...todo, title: updatedTitle, description: updatedDescription }
+                    : todo
+            )
+        );
     };
 
-    // Delete a todo
     const deleteTodo = (id) => {
-        setTodos(todos.filter(todo => todo.id !== id));
+        setTodos(prevTodos => prevTodos.filter(todo => todo.id !== id));
     };
 
-    // Toggle completed status
     const toggleTodoCompletion = (id) => {
-        setTodos(todos.map(todo =>
-            todo.id === id ? { ...todo, completed: !todo.completed } : todo
-        ));
+        setTodos(prevTodos =>
+            prevTodos.map(todo =>
+                todo.id === id ? { ...todo, completed: !todo.completed } : todo
+            )
+        );
     };
 
     return (

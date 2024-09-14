@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button, TextField, Typography, Box, Link, Container } from '@mui/material';
 
 const Register = () => {
-    const { login } = useContext(AuthContext);
+    const { register } = useContext(AuthContext);
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -12,9 +12,7 @@ const Register = () => {
     const navigate = useNavigate();
 
     const saveUser = (newUser) => {
-        const users = JSON.parse(localStorage.getItem('users')) || [];
-        users.push(newUser);
-        localStorage.setItem('users', JSON.stringify(users));
+        register(newUser)
     };
 
     const isEmailRegistered = (email) => {
@@ -24,22 +22,24 @@ const Register = () => {
 
     const handleRegister = (e) => {
         e.preventDefault();
-
+    
         if (!name || !email || !password) {
             setError('Please fill in all fields');
             return;
         }
-
+    
         if (isEmailRegistered(email)) {
             setError('This email is already registered');
             return;
         }
-
-        const newUser = { name, email, password };
-        saveUser(newUser);
-        login(newUser);
+    
+        // Call the register function, which already logs the user in
+        register(name, email, password);
+        
+        // Navigate to the '/todos' page after successful registration
         navigate('/todos');
     };
+    
 
     return (
         <Container maxWidth="xs">
